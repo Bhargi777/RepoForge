@@ -19,17 +19,13 @@ export function Navbar() {
           <span className="font-semibold tracking-tight text-white">RepoForge AI</span>
         </Link>
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="hidden sm:flex text-gray-400 hover:text-white" asChild>
-            <Link href="https://github.com/Bhargi777/README-Generator" target="_blank">
-              Documentation
-            </Link>
-          </Button>
-          <Button size="sm" className="bg-white text-black hover:bg-gray-200" asChild>
-            <Link href="/login">
-              <Github className="mr-2 h-4 w-4" />
-              Sign In
-            </Link>
-          </Button>
+          <Link href="https://github.com/Bhargi777/README-Generator" target="_blank" className="hidden sm:inline-flex h-9 items-center justify-center px-3 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+            Documentation
+          </Link>
+          <Link href="/login" className="inline-flex h-9 items-center justify-center rounded-md bg-white px-3 text-sm font-medium text-black hover:bg-gray-200 transition-colors">
+            <Github className="mr-2 h-4 w-4" />
+            Sign In
+          </Link>
         </div>
       </div>
     </motion.header>
