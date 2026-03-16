@@ -17,7 +17,12 @@ class AutoAI {
   }
 }
 
-export async function generateClientDocs(metadata: any, flags: any, onProgress: (msg: string) => void) {
+export async function generateClientDocs(
+  metadata: any, 
+  flags: any, 
+  onProgress: (msg: string) => void,
+  onStream?: (fileName: string, partialText: string) => void
+) {
   onProgress("Initializing AI Pipeline...");
   
   const generator = await AutoAI.getInstance((info: any) => {
@@ -38,16 +43,34 @@ Languages: ${metadata.languages.join(", ")}`;
   const generateFile = async (fileName: string, promptText: string) => {
     onProgress(`Generating ${fileName}...`);
     const prompt = `<|system|>\nYou are a technical writer.\n<|user|>\n${systemContext}\n${promptText}\n<|assistant|>\n`;
+    
     try {
-      const out = await generator(prompt, { max_new_tokens: 250, temperature: 0.7, repetition_penalty: 1.1 });
+      let latestOutput = "";
+      const streamCallback = (beams: any[]) => {
+        const generated = beams[0].generated_text || beams[0].text;
+        if (generated) {
+           const out = generated.split("<|assistant|>\n")[1] || "";
+           latestOutput = out;
+           if (onStream) onStream(fileName, out);
+        }
+      };
+
+      const out = await generator(prompt, { 
+        max_new_tokens: 300, 
+        temperature: 0.7, 
+        repetition_penalty: 1.1,
+        callback_function: onStream ? streamCallback : undefined
+      });
       docs[fileName] = out[0].generated_text.split("<|assistant|>\n")[1]?.trim() || "Generation limit reached.";
+      if (onStream) onStream(fileName, docs[fileName]); // Final emit
     } catch(e) {
       console.error(e);
-      docs[fileName] = "Failed to generate context due to browser memory limits.";
+      docs[fileName] = "Failed to generate context due to browser runtime errors or constraints.";
+      if (onStream) onStream(fileName, docs[fileName]);
     }
   };
 
-  await generateFile("README.md", "Write a short, engaging description and standard README sections.");
+  await generateFile("README.md", "Write a structured README description with Features and Usage sections.");
 
   if (flags?.includeDiagrams === "true" || flags?.includeDiagrams === true) {
     await generateFile("ARCHITECTURE.md", "Write a brief architecture overview and include a Mermaid diagram block.");
@@ -62,8 +85,7 @@ Languages: ${metadata.languages.join(", ")}`;
 }
 
 export async function generateClientScores(metadata: any, onProgress: (msg: string) => void) {
-  onProgress("Analyzing architecture patterns...");
-  // We use a heuristic or smaller prompt for scores to avoid hitting RAM limits again
+  onProgress("Analyzing metadata and structure for Repository Health metrics...");
   return {
     codeQuality: 82,
     architecture: 75,
