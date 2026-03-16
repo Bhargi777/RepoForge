@@ -37,6 +37,9 @@ export default function Login() {
           <Button onClick={handleLogin} className="w-full h-12 text-lg bg-white text-black hover:bg-gray-200">
             Sign in with GitHub
           </Button>
+          <p className="text-xs text-gray-500 mt-6">
+            GitHub OAuth is configured via environment variables. See Setup Docs for NextAuth config.
+          </p>
         </motion.div>
       </div>
     </main>
