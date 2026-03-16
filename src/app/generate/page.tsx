@@ -19,6 +19,7 @@ function GenerateContent() {
   const [scores, setScores] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState("Analyzing repository metadata...");
 
   useEffect(() => {
     if (!owner || !repo) {
@@ -26,48 +27,79 @@ function GenerateContent() {
       setLoading(false);
       return;
     }
-    
-    // Analyze Repo Health
-    fetch("/api/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ owner, repo })
-    }).then(res => res.json()).then(data => {
-      if (data.success) setScores(data.scores);
-    });
 
-    // Generate Docs
-    fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        owner,
-        repo,
-        flags: { includeDiagrams: diagrams, generateFullDocs: docsFlag }
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setDocs(data.docs);
-        } else {
-          setError(data.error);
-        }
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    const runBrowserGeneration = async (metadata: any) => {
+      try {
+        const { generateClientDocs, generateClientScores } = await import("@/lib/browser-ai");
+        
+        const clientScores = await generateClientScores(metadata, setLoadingMessage);
+        setScores(clientScores);
+        await fetch("/api/cache", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo, type: "scores", data: clientScores })
+        });
+
+        const clientDocs = await generateClientDocs(metadata, { includeDiagrams: diagrams, generateFullDocs: docsFlag }, setLoadingMessage);
+        setDocs(clientDocs);
+        await fetch("/api/cache", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo, type: "docs", data: clientDocs })
+        });
+      } catch (err: any) {
+        setError(err.message || "Failed client generation");
+      }
+    };
+
+    const fetchPipeline = async () => {
+       try {
+         // 1. Fetch scores (cached or metadata fallback)
+         const analyzeRes = await fetch("/api/analyze", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ owner, repo })
+         });
+         const analyzeData = await analyzeRes.json();
+         if (analyzeData.cached) {
+            setScores(analyzeData.scores);
+         }
+
+         // 2. Fetch docs (cached or metadata fallback)
+         const docsRes = await fetch("/api/generate", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ owner, repo })
+         });
+         const docsData = await docsRes.json();
+         
+         if (docsData.cached) {
+            setDocs(docsData.docs);
+         } else {
+            // Need to generate using metadata!
+            await runBrowserGeneration(docsData.metadata);
+         }
+       } catch (err: any) {
+         setError(err.message);
+       } finally {
+         setLoading(false);
+       }
+    };
+
+    fetchPipeline();
+
   }, [owner, repo, diagrams, docsFlag]);
 
   return (
     <div className="flex-1 container mx-auto px-6 py-8">
       {loading ? (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center h-[60vh] gap-4"
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           className="flex flex-col items-center justify-center h-[60vh] gap-4"
         >
           <Loader2 className="w-12 h-12 animate-spin text-gray-500" />
-          <p className="text-gray-400">Forging your documentation... This may take a moment based on your local AI.</p>
+          <p className="text-gray-400 font-medium">{loadingMessage}</p>
         </motion.div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center h-[60vh]">
