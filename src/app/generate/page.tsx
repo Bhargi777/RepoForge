@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { DocsPreview } from "@/components/DocsPreview";
+import { ScoreCard } from "@/components/ScoreCard";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,6 +16,7 @@ function GenerateContent() {
   const docsFlag = searchParams.get("docs");
 
   const [docs, setDocs] = useState<Record<string, string> | null>(null);
+  const [scores, setScores] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +27,16 @@ function GenerateContent() {
       return;
     }
     
+    // Analyze Repo Health
+    fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ owner, repo })
+    }).then(res => res.json()).then(data => {
+      if (data.success) setScores(data.scores);
+    });
+
+    // Generate Docs
     fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,7 +78,9 @@ function GenerateContent() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex flex-col w-full"
         >
+          <ScoreCard scores={scores} />
           <DocsPreview docs={docs} owner={owner as string} repo={repo as string} />
         </motion.div>
       ) : null}
