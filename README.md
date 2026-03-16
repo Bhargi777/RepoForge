@@ -1,39 +1,36 @@
 # RepoForge AI
 
-RepoForge AI is a developer productivity platform that automatically generates GitHub README, project documentation, architecture diagrams, setup guides, API docs, and contribution guides from a GitHub repository using a self-hosted local AI model (Ollama).
+RepoForge AI is a developer productivity platform that automatically generates GitHub README, project documentation, architecture diagrams, setup guides, API docs, and contribution guides from a GitHub repository.
+
+RepoForge AI runs completely serverless with an in-browser AI generation system using Transformers.js and caches the generated results using Upstash Redis.
 
 ## Features
 - **Repository Analyzer** fetches repo data using GitHub API
-- **AI Docs Generator** generates Markdown docs tailored to the repo structure
+- **Client-side AI Docs Generator** generates Markdown docs securely and locally in your browser
 - **Architecture Visualization** via Mermaid diagrams
 - **Repo Health Analyzer** scores code quality, security, architecture, etc.
 - **GitHub Push Integration** pushes your generated docs to a PR
+- **Redis Caching** instantly restores previously generated docs
 
 ## Deployment Instructions
 
-### 1. Running Ollama & Pulling the Model
-You must have a local instance of Ollama running to generate documentation without exhausting paid APIs.
-1. Download and install Ollama from [ollama.com](https://ollama.com).
-2. Start the Ollama server:
-   ```bash
-   ollama serve
-   ```
-3. Pull the required model (default is llama3):
-   ```bash
-   ollama pull llama3
-   ```
-*(You can also use `mistral` or `deepseek-coder` by changing the `OLLAMA_MODEL` environment variable).*
+### 1. Upstash Redis Setup
+You need a Redis instance to cache generated documents.
+1. Sign up at [Upstash](https://upstash.com/).
+2. Create a new Redis database.
+3. Copy the REST URL and REST Token to your environment.
 
-### 2. Configuring GitHub OAuth & Environment Variables
-Create a `.env.local` file in the root directory and add the following:
+### 2. Environment Variables
+Create a file named `.env.local` in the root directory and add the following:
 ```env
-OLLAMA_ENDPOINT="http://localhost:11434"
-OLLAMA_MODEL="llama3"
+# Upstash Redis Configuration
+UPSTASH_REDIS_REST_URL="your-upstash-url"
+UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
 
-# For generic token strategy:
+# For generic token strategy (GitHub calls limit):
 GITHUB_TOKEN="your_personal_access_token_here"
 
-# For explicit OAuth Setup (NextAuth):
+# For explicit OAuth Setup:
 GITHUB_CLIENT_ID="your_oauth_client_id"
 GITHUB_CLIENT_SECRET="your_oauth_client_secret"
 ```
@@ -58,6 +55,5 @@ To configure GitHub OAuth via developer settings:
 ### 4. Deploying to Vercel
 1. Push your repository to GitHub.
 2. Go to [Vercel](https://vercel.com) and import your repository.
-3. Configure the environment variables (`OLLAMA_ENDPOINT`, `OLLAMA_MODEL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`).
-   *Note: Ensure your `OLLAMA_ENDPOINT` is a public URL (like ngrok) if you are running Ollama locally and accessing it from a Vercel deployment!*
+3. Configure the environment variables.
 4. Click Deploy.
