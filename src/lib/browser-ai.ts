@@ -1,7 +1,7 @@
 import { pipeline } from '@xenova/transformers';
 
 class AutoAI {
-  static task = "text-generation";
+  static task: any = "text-generation";
   // using a small, lightweight model to ensure it works in browser WASM context without crashing
   static model = "Xenova/TinyLlama-1.1B-Chat-v1.0";
   static instance: any = null;
@@ -9,9 +9,8 @@ class AutoAI {
   static async getInstance(progress_callback?: Function) {
     if (this.instance === null) {
       this.instance = pipeline(this.task, this.model, { 
-        progress_callback,
-        device: "auto"
-      });
+        progress_callback
+      } as any);
     }
     return this.instance;
   }

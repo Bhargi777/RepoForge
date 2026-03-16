@@ -69,8 +69,11 @@ function GenerateContent() {
         await fetch("/api/cache", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ owner, repo, type: "failed" })
+          body: JSON.stringify({ owner, repo, type: "failed", data: metadata })
         });
+        
+        // Let the user know the server is handling it
+        setLoadingMessage("Browser AI memory exceeded. Forwarded to secure Server AI Fallback Queue...");
       }
     };
 

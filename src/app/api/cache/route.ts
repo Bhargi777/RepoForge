@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
-import { releaseJobLock, updateJobStatus } from "@/lib/queue";
+import { releaseJobLock, updateJobStatus, enqueueFallbackJob } from "@/lib/queue";
 
 export async function POST(req: Request) {
   try {
@@ -16,8 +16,11 @@ export async function POST(req: Request) {
          const cacheKey = `scores:${owner}/${repo}`;
          await redis.set(cacheKey, data, { ex: 60 * 60 * 24 }); // 24 hours cache TTL
       } else if (type === "failed") {
-         await updateJobStatus(owner, repo, "failed");
-         await releaseJobLock(owner, repo);
+         // Push to standard background worker queue instead of strictly marking as failed
+         await enqueueFallbackJob(owner, repo, data, {});
+         
+         // Trigger the fallback webhook execution attempt non-blocking
+         fetch(`${req.headers.get("origin") || "http://localhost:3000"}/api/fallback`, { method: "POST" }).catch(() => {});
       }
     }
 
