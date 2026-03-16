@@ -4,11 +4,22 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
-import { toast } from "sonner";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Login() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
+
   const handleLogin = () => {
-    toast.info("GitHub OAuth is configured via environment variables. See Setup Docs for NextAuth config.");
+    signIn("github", { callbackUrl: "/" });
   };
 
   return (
