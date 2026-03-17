@@ -2,46 +2,56 @@
 
 RepoForge AI is a developer productivity platform that automatically generates GitHub README, project documentation, architecture diagrams, setup guides, API docs, and contribution guides from a GitHub repository.
 
-RepoForge AI runs completely serverless with an in-browser AI generation system using Transformers.js and caches the generated results using Upstash Redis.
+RepoForge AI runs completely serverless using **Groq API** for fast AI-powered documentation generation and **Upstash Redis** for intelligent caching.
 
 ## Features
 - **Repository Analyzer** fetches repo data using GitHub API
-- **Client-side AI Docs Generator** generates Markdown docs securely and locally in your browser
+- **AI Docs Generator** powered by Groq's LLM (llama-3.1-70b)
 - **Architecture Visualization** via Mermaid diagrams
 - **Repo Health Analyzer** scores code quality, security, architecture, etc.
-- **GitHub Push Integration** pushes your generated docs to a PR
+- **GitHub Authentication** with OAuth for secure access
+- **Push to GitHub** creates pull requests directly from the app (authenticated users only)
 - **Redis Caching** instantly restores previously generated docs
+- **Fast & Reliable** - Production-ready on Vercel with no GPU servers required
 
-## Deployment Instructions
+## Tech Stack
+- **Frontend:** Next.js 15, React 19, Tailwind CSS
+- **API:** Groq (AI generation), GitHub API (repo metadata), Upstash Redis (caching)
+- **Deployment:** Vercel (serverless)
 
-### 1. Upstash Redis Setup
+## Quick Start
+
+### 1. Groq API Setup
+You need a Groq API key for AI generation.
+1. Sign up at [Groq Console](https://console.groq.com/).
+2. Generate an API key.
+3. Add it to your `.env.local` as `GROQ_API_KEY`.
+
+### 2. Upstash Redis Setup
 You need a Redis instance to cache generated documents.
 1. Sign up at [Upstash](https://upstash.com/).
 2. Create a new Redis database.
 3. Copy the REST URL and REST Token to your environment.
 
-### 2. Environment Variables
+### 3. Environment Variables
 Create a file named `.env.local` in the root directory and add the following:
 ```env
-# Upstash Redis Configuration
+# Groq API (Required for AI generation)
+GROQ_API_KEY="your_groq_api_key_here"
+
+# Upstash Redis Configuration (Required for caching)
 UPSTASH_REDIS_REST_URL="your-upstash-url"
 UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
 
-# For generic token strategy (GitHub calls limit):
+# GitHub Configuration (Required for repo metadata)
 GITHUB_TOKEN="your_personal_access_token_here"
 
-# For explicit OAuth Setup:
+# For GitHub OAuth (Optional, for push-to-PR feature):
 GITHUB_CLIENT_ID="your_oauth_client_id"
 GITHUB_CLIENT_SECRET="your_oauth_client_secret"
 ```
 
-To configure GitHub OAuth via developer settings:
-1. Go to your GitHub account settings -> Developer Settings -> OAuth Apps.
-2. Click "New OAuth App".
-3. Set Authorization callback URL to `http://localhost:3000/api/auth/callback/github`.
-4. Generate the secret and paste the IDs above.
-
-### 3. Running the App Locally
+### 4. Running the App Locally
 1. Install dependencies:
    ```bash
    npm install
