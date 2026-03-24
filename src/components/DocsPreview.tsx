@@ -1,53 +1,30 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Copy, Download, Github, ExternalLink } from "lucide-react";
+import { Copy, Download } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { toast } from "sonner";
-import { useSession, signIn } from "next-auth/react";
-import Link from "next/link";
 
 export function DocsPreview({ docs, owner, repo }: { docs: Record<string, string>, owner: string, repo: string }) {
-  const { data: session } = useSession();
   const filteredDocs = Object.entries(docs).filter(([_, content]) => Boolean(content));
   const [activeTab, setActiveTab] = useState(filteredDocs[0]?.[0] || "README.md");
-  const [isPushing, setIsPushing] = useState(false);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(docs[activeTab] || "");
     toast.success(`${activeTab} copied to clipboard!`);
   };
 
-  const handlePush = async () => {
-    if (!session) {
-      toast.error("Please sign in with GitHub to push documentation");
-      signIn("github");
-      return;
-    }
-
-    setIsPushing(true);
-    const toastId = toast.loading("Creating pull request...");
-    try {
-      const res = await fetch("/api/push", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ docs, owner, repo })
-      });
-      const data = await res.json();
-      
-      if (data.success && data.url) {
-        setPrUrl(data.url);
-        toast.success("PR created successfully!", { id: toastId });
-      } else {
-        toast.error("Push failed: " + (data.error || "Unknown error"), { id: toastId });
-      }
-    } catch (e) {
-      console.error("Push error:", e);
-      toast.error("Network error during push", { id: toastId });
-    } finally {
-      setIsPushing(false);
-    }
+  const handleDownload = () => {
+    const content = docs[activeTab] || "";
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", activeTab);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`${activeTab} downloaded!`);
   };
 
   return (
@@ -92,33 +69,12 @@ export function DocsPreview({ docs, owner, repo }: { docs: Record<string, string
           </Button>
           
           <Button 
-            onClick={handlePush} 
-            disabled={isPushing}
-            className="w-full justify-start bg-white text-black hover:bg-gray-200 disabled:opacity-50"
+            onClick={handleDownload} 
+            className="w-full justify-start bg-white text-black hover:bg-gray-200"
           >
-            <Github className="mr-2 h-4 w-4" /> 
-            {isPushing ? "Creating PR..." : "Push to GitHub"}
+            <Download className="mr-2 h-4 w-4" /> 
+            Download {activeTab}
           </Button>
-
-          {!session && (
-            <p className="text-xs text-yellow-500 text-center">
-              Sign in to enable push to GitHub
-            </p>
-          )}
-
-          {prUrl && (
-            <div className="mt-4 p-4 bg-green-900/20 border border-green-500/30 rounded-lg">
-              <p className="text-sm text-green-400 mb-2 font-semibold">PR Created!</p>
-              <Link 
-                href={prUrl} 
-                target="_blank" 
-                className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-2 break-all"
-              >
-                {prUrl}
-                <ExternalLink className="h-3 w-3 flex-shrink-0" />
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     </div>
