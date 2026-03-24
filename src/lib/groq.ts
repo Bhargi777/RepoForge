@@ -160,7 +160,7 @@ async function generateWithGroq(
   try {
     const groq = getGroqClient();
     const message = await groq.chat.completions.create({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",
@@ -343,7 +343,7 @@ async function generateWithGroqStream(
 
     const groq = getGroqClient();
     const stream = await groq.chat.completions.create({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",

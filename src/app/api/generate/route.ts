@@ -99,10 +99,12 @@ export async function POST(req: Request) {
       await updateJobStatus(owner, repo, "failed");
       await releaseJobLock(owner, repo);
       
+      const errorMessage = genError instanceof Error ? genError.message : String(genError);
+      
       return NextResponse.json(
         {
           success: false,
-          error: "Failed to generate documentation. Please try again or check your Groq API key."
+          error: `Failed to generate documentation: ${errorMessage}`
         },
         { status: 500 }
       );
