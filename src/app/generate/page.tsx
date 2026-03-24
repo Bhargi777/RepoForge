@@ -12,8 +12,9 @@ function GenerateContent() {
   const searchParams = useSearchParams();
   const owner = searchParams.get("owner");
   const repo = searchParams.get("repo");
-  const diagrams = searchParams.get("diagrams");
-  const docsFlag = searchParams.get("docs");
+  const emojis = searchParams.get("emojis");
+  const readmePrompt = searchParams.get("readmePrompt");
+  const contributingPrompt = searchParams.get("contributingPrompt");
 
   const [docs, setDocs] = useState<Record<string, string> | null>(null);
   const [scores, setScores] = useState<Record<string, number> | null>(null);
@@ -62,9 +63,10 @@ function GenerateContent() {
             owner,
             repo,
             flags: {
-              includeDiagrams: diagrams === "true",
-              generateFullDocs: docsFlag === "true"
-            }
+              includeEmojis: emojis === "true"
+            },
+            customReadmePrompt: readmePrompt || undefined,
+            customContributingPrompt: contributingPrompt || undefined
           })
         });
 
