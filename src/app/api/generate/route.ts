@@ -4,7 +4,6 @@ import { redis } from "@/lib/redis";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { createJobLock, releaseJobLock, updateJobStatus } from "@/lib/queue";
 import { generateDocumentationStream } from "@/lib/groq";
-import { getRepositoryPrompts } from "@/lib/repo-config";
 
 export const maxDuration = 60; // Vercel timeout
 
@@ -20,7 +19,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { owner, repo, flags } = await req.json();
+    const { owner, repo, flags, customReadmePrompt, customContributingPrompt } = await req.json();
     
     // 1. Check Redis Cache
     const cacheKey = `repo:${owner}/${repo}`;
@@ -70,21 +69,12 @@ export async function POST(req: Request) {
     await updateJobStatus(owner, repo, "generating");
     
     try {
-      // Fetch per-repo intelligence/custom prompts
-      const prompts = await getRepositoryPrompts(owner, repo);
-      
       const docs = await generateDocumentationStream(
         metadata,
         {
-          includeDiagrams: flags?.includeDiagrams === "true" || flags?.includeDiagrams === true,
-          generateFullDocs: flags?.generateFullDocs === "true" || flags?.generateFullDocs === true,
-          systemPrompt: prompts.system,
-          readmePrompt: prompts.readme,
-          architecturePrompt: prompts.architecture,
-          contributingPrompt: prompts.contributing,
-          apiPrompt: prompts.api,
-          roadmapPrompt: prompts.roadmap,
-          setupPrompt: prompts.setup,
+          includeEmojis: flags?.includeEmojis === "true" || flags?.includeEmojis === true,
+          customReadmePrompt: customReadmePrompt || undefined,
+          customContributingPrompt: customContributingPrompt || undefined,
         }
       );
 
