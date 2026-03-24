@@ -103,7 +103,7 @@ function GenerateContent() {
     };
 
     generateDocumentation();
-  }, [owner, repo, diagrams, docsFlag]);
+  }, [owner, repo, emojis, readmePrompt, contributingPrompt]);
 
   return (
     <div className="flex-1 container mx-auto px-6 py-8">
