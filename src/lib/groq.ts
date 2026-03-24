@@ -13,15 +13,9 @@ function getGroqClient(): Groq {
 }
 
 export interface GenerationOptions {
-  includeDiagrams?: boolean;
-  generateFullDocs?: boolean;
-  readmePrompt?: string;
-  architecturePrompt?: string;
-  contributingPrompt?: string;
-  apiPrompt?: string;
-  roadmapPrompt?: string;
-  setupPrompt?: string;
-  systemPrompt?: string;
+  includeEmojis?: boolean;
+  customReadmePrompt?: string;
+  customContributingPrompt?: string;
 }
 
 export interface DocumentationSet {
@@ -29,16 +23,13 @@ export interface DocumentationSet {
 }
 
 /**
- * Generate comprehensive documentation for a repository using Groq
+ * Generate README.md and CONTRIBUTING.md using Groq
  */
 export async function generateDocumentation(
   metadata: any,
   options: GenerationOptions = {}
 ): Promise<DocumentationSet> {
-  // Build system prompt with repository context
-  const baseSystemPrompt = options.systemPrompt || `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.`;
-  
-  const systemPrompt = `${baseSystemPrompt}
+  const systemPrompt = `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.
 
 Repository Context:
 - Name: ${metadata.name}
@@ -49,7 +40,7 @@ Repository Context:
   const docs: DocumentationSet = {};
 
   // README.md
-  const readmePrompt = options.readmePrompt || `Generate a professional README.md for this repository. 
+  const readmePrompt = options.customReadmePrompt || `Generate a professional README.md for this repository. 
 Include sections:
 1. Title and description
 2. Key Features (2-5 bullet points)
@@ -60,7 +51,7 @@ Include sections:
 7. Contributing
 8. License
 
-Make it engaging and comprehensive. Use proper Markdown formatting.`;
+Make it engaging and comprehensive. Use proper Markdown formatting.${options.includeEmojis ? " Include relevant emojis to make it visually appealing." : ""}`;
 
   docs["README.md"] = await generateWithGroq(
     systemPrompt,
@@ -68,45 +59,8 @@ Make it engaging and comprehensive. Use proper Markdown formatting.`;
     "README.md"
   );
 
-  // ARCHITECTURE.md
-  if (options.includeDiagrams !== false) {
-    const archPrompt = options.architecturePrompt || `Generate ARCHITECTURE.md explaining:
-1. System architecture overview
-2. Key components and modules
-3. Data flow and interactions
-4. Design patterns used
-5. Include a Mermaid diagram inside a \`\`\`mermaid code block showing the system architecture
-
-Be concise but comprehensive. Focus on how the system is organized.`;
-
-    docs["ARCHITECTURE.md"] = await generateWithGroq(
-      systemPrompt,
-      archPrompt,
-      "ARCHITECTURE.md"
-    );
-  }
-
-  // SETUP.md
-  if (options.generateFullDocs !== false) {
-    const setupPrompt = options.setupPrompt || `Generate SETUP.md with:
-1. Prerequisites
-2. Environment variables setup (with examples)
-3. Installation steps
-4. Local development instructions
-5. Running tests (if applicable)
-6. Build instructions
-7. Deployment notes
-
-Be practical and step-by-step. Include commands where appropriate.`;
-
-    docs["SETUP.md"] = await generateWithGroq(
-      systemPrompt,
-      setupPrompt,
-      "SETUP.md"
-    );
-
-    // CONTRIBUTING.md
-    const contribPrompt = options.contributingPrompt || `Generate CONTRIBUTING.md with:
+  // CONTRIBUTING.md
+  const contribPrompt = options.customContributingPrompt || `Generate CONTRIBUTING.md with:
 1. Development setup for contributors
 2. Branching strategy and naming conventions
 3. Commit message conventions
@@ -115,46 +69,13 @@ Be practical and step-by-step. Include commands where appropriate.`;
 6. Testing requirements
 7. How to report issues
 
-Make it welcoming but clear about expectations.`;
+Make it welcoming but clear about expectations.${options.includeEmojis ? " Include relevant emojis to enhance readability." : ""}`;
 
-    docs["CONTRIBUTING.md"] = await generateWithGroq(
-      systemPrompt,
-      contribPrompt,
-      "CONTRIBUTING.md"
-    );
-
-    // API.md (for projects with APIs)
-    const apiPrompt = options.apiPrompt || `Generate API.md. If this is an API project or has significant API components:
-1. Document all main endpoints/functions
-2. Include parameters and return types
-3. Provide example usage
-4. Document error handling
-
-If this is not primarily an API project, document the main public interfaces and modules instead. Keep examples practical and clear.`;
-
-    docs["API.md"] = await generateWithGroq(
-      systemPrompt,
-      apiPrompt,
-      "API.md"
-    );
-
-    // ROADMAP.md
-    const roadmapPrompt = options.roadmapPrompt || `Generate ROADMAP.md suggesting:
-1. Planned features (next 3-6 months)
-2. Performance improvements
-3. Scalability considerations
-4. Breaking changes or major refactors
-5. Integration opportunities
-6. Community requests (speculative)
-
-Be realistic but inspiring. Maintain alignment with the project's purpose.`;
-
-    docs["ROADMAP.md"] = await generateWithGroq(
-      systemPrompt,
-      roadmapPrompt,
-      "ROADMAP.md"
-    );
-  }
+  docs["CONTRIBUTING.md"] = await generateWithGroq(
+    systemPrompt,
+    contribPrompt,
+    "CONTRIBUTING.md"
+  );
 
   return docs;
 }
@@ -206,10 +127,7 @@ export async function generateDocumentationStream(
   options: GenerationOptions = {},
   onProgress?: (fileName: string, content: string) => void
 ): Promise<DocumentationSet> {
-  // Build system prompt with repository context
-  const baseSystemPrompt = options.systemPrompt || `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.`;
-  
-  const systemPrompt = `${baseSystemPrompt}
+  const systemPrompt = `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.
 
 Repository Context:
 - Name: ${metadata.name}
@@ -220,7 +138,7 @@ Repository Context:
   const docs: DocumentationSet = {};
 
   // README.md
-  const readmePrompt = options.readmePrompt || `Generate a professional README.md for this repository. 
+  const readmePrompt = options.customReadmePrompt || `Generate a professional README.md for this repository. 
 Include sections:
 1. Title and description
 2. Key Features (2-5 bullet points)
@@ -231,7 +149,7 @@ Include sections:
 7. Contributing
 8. License
 
-Make it engaging and comprehensive. Use proper Markdown formatting.`;
+Make it engaging and comprehensive. Use proper Markdown formatting.${options.includeEmojis ? " Include relevant emojis to make it visually appealing." : ""}`;
 
   const readmeContent = await generateWithGroqStream(
     systemPrompt,
@@ -241,49 +159,8 @@ Make it engaging and comprehensive. Use proper Markdown formatting.`;
   );
   docs["README.md"] = readmeContent;
 
-  // ARCHITECTURE.md
-  if (options.includeDiagrams !== false) {
-    const archPrompt = options.architecturePrompt || `Generate ARCHITECTURE.md explaining:
-1. System architecture overview
-2. Key components and modules
-3. Data flow and interactions
-4. Design patterns used
-5. Include a Mermaid diagram inside a \`\`\`mermaid code block showing the system architecture
-
-Be concise but comprehensive. Focus on how the system is organized.`;
-
-    const archContent = await generateWithGroqStream(
-      systemPrompt,
-      archPrompt,
-      "ARCHITECTURE.md",
-      onProgress
-    );
-    docs["ARCHITECTURE.md"] = archContent;
-  }
-
-  // SETUP.md
-  if (options.generateFullDocs !== false) {
-    const setupPrompt = options.setupPrompt || `Generate SETUP.md with:
-1. Prerequisites
-2. Environment variables setup (with examples)
-3. Installation steps
-4. Local development instructions
-5. Running tests (if applicable)
-6. Build instructions
-7. Deployment notes
-
-Be practical and step-by-step. Include commands where appropriate.`;
-
-    const setupContent = await generateWithGroqStream(
-      systemPrompt,
-      setupPrompt,
-      "SETUP.md",
-      onProgress
-    );
-    docs["SETUP.md"] = setupContent;
-
-    // CONTRIBUTING.md
-    const contribPrompt = options.contributingPrompt || `Generate CONTRIBUTING.md with:
+  // CONTRIBUTING.md
+  const contribPrompt = options.customContributingPrompt || `Generate CONTRIBUTING.md with:
 1. Development setup for contributors
 2. Branching strategy and naming conventions
 3. Commit message conventions
@@ -292,52 +169,15 @@ Be practical and step-by-step. Include commands where appropriate.`;
 6. Testing requirements
 7. How to report issues
 
-Make it welcoming but clear about expectations.`;
+Make it welcoming but clear about expectations.${options.includeEmojis ? " Include relevant emojis to enhance readability." : ""}`;
 
-    const contribContent = await generateWithGroqStream(
-      systemPrompt,
-      contribPrompt,
-      "CONTRIBUTING.md",
-      onProgress
-    );
-    docs["CONTRIBUTING.md"] = contribContent;
-
-    // API.md
-    const apiPrompt = options.apiPrompt || `Generate API.md. If this is an API project or has significant API components:
-1. Document all main endpoints/functions
-2. Include parameters and return types
-3. Provide example usage
-4. Document error handling
-
-If this is not primarily an API project, document the main public interfaces and modules instead. Keep examples practical and clear.`;
-
-    const apiContent = await generateWithGroqStream(
-      systemPrompt,
-      apiPrompt,
-      "API.md",
-      onProgress
-    );
-    docs["API.md"] = apiContent;
-
-    // ROADMAP.md
-    const roadmapPrompt = options.roadmapPrompt || `Generate ROADMAP.md suggesting:
-1. Planned features (next 3-6 months)
-2. Performance improvements
-3. Scalability considerations
-4. Breaking changes or major refactors
-5. Integration opportunities
-6. Community requests (speculative)
-
-Be realistic but inspiring. Maintain alignment with the project's purpose.`;
-
-    const roadmapContent = await generateWithGroqStream(
-      systemPrompt,
-      roadmapPrompt,
-      "ROADMAP.md",
-      onProgress
-    );
-    docs["ROADMAP.md"] = roadmapContent;
-  }
+  const contribContent = await generateWithGroqStream(
+    systemPrompt,
+    contribPrompt,
+    "CONTRIBUTING.md",
+    onProgress
+  );
+  docs["CONTRIBUTING.md"] = contribContent;
 
   return docs;
 }
