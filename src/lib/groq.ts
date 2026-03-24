@@ -15,6 +15,13 @@ function getGroqClient(): Groq {
 export interface GenerationOptions {
   includeDiagrams?: boolean;
   generateFullDocs?: boolean;
+  readmePrompt?: string;
+  architecturePrompt?: string;
+  contributingPrompt?: string;
+  apiPrompt?: string;
+  roadmapPrompt?: string;
+  setupPrompt?: string;
+  systemPrompt?: string;
 }
 
 export interface DocumentationSet {
@@ -28,7 +35,10 @@ export async function generateDocumentation(
   metadata: any,
   options: GenerationOptions = {}
 ): Promise<DocumentationSet> {
-  const systemPrompt = `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.
+  // Build system prompt with repository context
+  const baseSystemPrompt = options.systemPrompt || `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.`;
+  
+  const systemPrompt = `${baseSystemPrompt}
 
 Repository Context:
 - Name: ${metadata.name}
@@ -39,7 +49,7 @@ Repository Context:
   const docs: DocumentationSet = {};
 
   // README.md
-  const readmePrompt = `Generate a professional README.md for this repository. 
+  const readmePrompt = options.readmePrompt || `Generate a professional README.md for this repository. 
 Include sections:
 1. Title and description
 2. Key Features (2-5 bullet points)
@@ -60,7 +70,7 @@ Make it engaging and comprehensive. Use proper Markdown formatting.`;
 
   // ARCHITECTURE.md
   if (options.includeDiagrams !== false) {
-    const archPrompt = `Generate ARCHITECTURE.md explaining:
+    const archPrompt = options.architecturePrompt || `Generate ARCHITECTURE.md explaining:
 1. System architecture overview
 2. Key components and modules
 3. Data flow and interactions
@@ -78,7 +88,7 @@ Be concise but comprehensive. Focus on how the system is organized.`;
 
   // SETUP.md
   if (options.generateFullDocs !== false) {
-    const setupPrompt = `Generate SETUP.md with:
+    const setupPrompt = options.setupPrompt || `Generate SETUP.md with:
 1. Prerequisites
 2. Environment variables setup (with examples)
 3. Installation steps
@@ -96,7 +106,7 @@ Be practical and step-by-step. Include commands where appropriate.`;
     );
 
     // CONTRIBUTING.md
-    const contribPrompt = `Generate CONTRIBUTING.md with:
+    const contribPrompt = options.contributingPrompt || `Generate CONTRIBUTING.md with:
 1. Development setup for contributors
 2. Branching strategy and naming conventions
 3. Commit message conventions
@@ -114,7 +124,7 @@ Make it welcoming but clear about expectations.`;
     );
 
     // API.md (for projects with APIs)
-    const apiPrompt = `Generate API.md. If this is an API project or has significant API components:
+    const apiPrompt = options.apiPrompt || `Generate API.md. If this is an API project or has significant API components:
 1. Document all main endpoints/functions
 2. Include parameters and return types
 3. Provide example usage
@@ -129,7 +139,7 @@ If this is not primarily an API project, document the main public interfaces and
     );
 
     // ROADMAP.md
-    const roadmapPrompt = `Generate ROADMAP.md suggesting:
+    const roadmapPrompt = options.roadmapPrompt || `Generate ROADMAP.md suggesting:
 1. Planned features (next 3-6 months)
 2. Performance improvements
 3. Scalability considerations
@@ -196,7 +206,10 @@ export async function generateDocumentationStream(
   options: GenerationOptions = {},
   onProgress?: (fileName: string, content: string) => void
 ): Promise<DocumentationSet> {
-  const systemPrompt = `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.
+  // Build system prompt with repository context
+  const baseSystemPrompt = options.systemPrompt || `You are an expert open-source maintainer and technical writer who creates professional, well-structured GitHub documentation. Your writing follows industry best practices for clarity, completeness, and engagement.`;
+  
+  const systemPrompt = `${baseSystemPrompt}
 
 Repository Context:
 - Name: ${metadata.name}
@@ -207,7 +220,7 @@ Repository Context:
   const docs: DocumentationSet = {};
 
   // README.md
-  const readmePrompt = `Generate a professional README.md for this repository. 
+  const readmePrompt = options.readmePrompt || `Generate a professional README.md for this repository. 
 Include sections:
 1. Title and description
 2. Key Features (2-5 bullet points)
@@ -230,7 +243,7 @@ Make it engaging and comprehensive. Use proper Markdown formatting.`;
 
   // ARCHITECTURE.md
   if (options.includeDiagrams !== false) {
-    const archPrompt = `Generate ARCHITECTURE.md explaining:
+    const archPrompt = options.architecturePrompt || `Generate ARCHITECTURE.md explaining:
 1. System architecture overview
 2. Key components and modules
 3. Data flow and interactions
@@ -250,7 +263,7 @@ Be concise but comprehensive. Focus on how the system is organized.`;
 
   // SETUP.md
   if (options.generateFullDocs !== false) {
-    const setupPrompt = `Generate SETUP.md with:
+    const setupPrompt = options.setupPrompt || `Generate SETUP.md with:
 1. Prerequisites
 2. Environment variables setup (with examples)
 3. Installation steps
@@ -270,7 +283,7 @@ Be practical and step-by-step. Include commands where appropriate.`;
     docs["SETUP.md"] = setupContent;
 
     // CONTRIBUTING.md
-    const contribPrompt = `Generate CONTRIBUTING.md with:
+    const contribPrompt = options.contributingPrompt || `Generate CONTRIBUTING.md with:
 1. Development setup for contributors
 2. Branching strategy and naming conventions
 3. Commit message conventions
@@ -290,7 +303,7 @@ Make it welcoming but clear about expectations.`;
     docs["CONTRIBUTING.md"] = contribContent;
 
     // API.md
-    const apiPrompt = `Generate API.md. If this is an API project or has significant API components:
+    const apiPrompt = options.apiPrompt || `Generate API.md. If this is an API project or has significant API components:
 1. Document all main endpoints/functions
 2. Include parameters and return types
 3. Provide example usage
@@ -307,7 +320,7 @@ If this is not primarily an API project, document the main public interfaces and
     docs["API.md"] = apiContent;
 
     // ROADMAP.md
-    const roadmapPrompt = `Generate ROADMAP.md suggesting:
+    const roadmapPrompt = options.roadmapPrompt || `Generate ROADMAP.md suggesting:
 1. Planned features (next 3-6 months)
 2. Performance improvements
 3. Scalability considerations
